@@ -2,26 +2,19 @@ import json
 import os
 from ftplib import FTP
 
-FTP_HOST = '158.108.97.1287' 
-FTP_USER = 'st036034230'  
+FTP_HOST = '158.108.98.128' 
+FTP_USER = 'st03603423'  
 FTP_PASS = 'st03603423'      
 
-# 1. กำหนดชื่อโฟลเดอร์ที่ต้องการเก็บข้อมูล (แก้ชื่อโฟลเดอร์ตรงนี้ได้เลย)
-DATA_FOLDER = 'motorwayFree'
-
-# 2. รวมชื่อโฟลเดอร์เข้ากับชื่อไฟล์
-DB_FILE = os.path.join(DATA_FOLDER, 'database.json')
-
-# 3. เช็คว่ามีโฟลเดอร์นี้หรือยัง ถ้ายังไม่มีให้สร้างขึ้นมาอัตโนมัติ
-if not os.path.exists(DATA_FOLDER):
-    os.makedirs(DATA_FOLDER)
+LOCAL_DB_FILE = 'database.json' 
+REMOTE_FOLDER = 'motorwayFree' # ระบุชื่อโฟลเดอร์ตรงนี้
 
 def download_db():
     try:
         ftp = FTP(FTP_HOST)
         ftp.login(user=FTP_USER, passwd=FTP_PASS)
-        with open(DB_FILE, 'wb') as localfile:
-            # ดึงไฟล์จาก FTP มาเก็บในโฟลเดอร์
+        ftp.cwd(REMOTE_FOLDER) # สั่งให้เดินเข้าไปในโฟลเดอร์ก่อน
+        with open(LOCAL_DB_FILE, 'wb') as localfile:
             ftp.retrbinary('RETR database.json', localfile.write, 1024)
         ftp.quit()
     except Exception as e:
@@ -30,26 +23,27 @@ def download_db():
 def upload_db():
     try:
         ftp = FTP(FTP_HOST)
-        ftp.connect(timeout=5) 
+        ftp.connect(timeout=10)
         ftp.login(user=FTP_USER, passwd=FTP_PASS)
-        with open(DB_FILE, 'rb') as localfile:
-            # ส่งไฟล์ขึ้น FTP (บน FTP จะไม่มีโฟลเดอร์ nfc_data เพื่อไม่ให้อาจารย์สับสน)
-            ftp.storbinary('STOR database.json', localfile)
+        
+        ftp.cwd(REMOTE_FOLDER) # สั่งให้เดินเข้าไปในโฟลเดอร์ก่อน
+        
+        with open(LOCAL_DB_FILE, 'rb') as localfile:
+            ftp.storbinary('STOR database.json', localfile) # วางไฟล์ด้วยชื่อเพียวๆ
         ftp.quit()
-        return True 
+        print("✅ FTP Sync: อัปโหลดไฟล์ขึ้นเซิร์ฟเวอร์สำเร็จ!") # แจ้งเตือนเมื่อส่งผ่าน
+        return True
     except Exception as e:
-        print(f"📡 FTP Sync ปล่อยเบลอไปก่อน: {e}") 
-        return False 
+        print(f"❌ FTP Sync Error: {e}")
+        return False
 
 def load_local_db():
     try:
-        # โหลดไฟล์จากในโฟลเดอร์ nfc_data
-        with open(DB_FILE, 'r', encoding='utf-8') as f:
+        with open(LOCAL_DB_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
     except:
         return {}
 
 def save_local_db(data):
-    # เซฟไฟล์ลงไปในโฟลเดอร์ nfc_data
-    with open(DB_FILE, 'w', encoding='utf-8') as f:
+    with open(LOCAL_DB_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
