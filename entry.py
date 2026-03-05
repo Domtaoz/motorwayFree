@@ -100,7 +100,7 @@ def check_toll_logic(uid):
 def sync_every_5_mins():
     global need_sync
     while True:
-        time.sleep(15)
+        time.sleep(1)
         if need_sync:
             try:
                 # ล็อคก่อนจะอัปโหลด เพื่อไม่ให้ชนกับการเขียน DB ข้างล่าง
