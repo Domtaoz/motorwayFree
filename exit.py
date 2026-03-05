@@ -42,39 +42,39 @@ def process_cd_sync(uid, fee, exit_station):
         need_sync = True 
         
     try:
-        root.after(0, lambda: lbl_log.config(text=f"Log (Thread C,D): ✅ หักเงิน {fee} บ. และรอส่ง FTP รอบถัดไป", fg="green"))
+        root.after(0, lambda: lbl_log.config(text=f"[✓] Deducted: {fee} THB. Pending sync.", fg=SUCCESS))
     except RuntimeError: pass
 
 def exit_toll_logic(uid):
     selected_exit_station = station_var.get()
     
     if not selected_exit_station:
-        lbl_status.config(text="⚠️ กรุณาเลือกสถานีก่อนสแกนบัตร", fg="orange")
-        lbl_log.config(text="Log (Thread C,D): รอการทำงาน", fg="blue")
+        lbl_status.config(text="Please select a station first.", fg=WARNING)
+        lbl_log.config(text="-", fg=TEXT_SUB)
         return
 
-    lbl_log.config(text="Log (Thread C,D): ⚡ กำลังประมวลผลบัตรใหม่...", fg="blue")
+    lbl_log.config(text="Processing card...", fg=ACCENT)
     db = ftp_manager.load_local_db()
-    lbl_card.config(text=f"Card ID: {uid}")
+    lbl_card.config(text=f"UID: {uid}")
     
     if uid not in db or not db[uid].get('entry_station'):
-        lbl_status.config(text="ไม่พบข้อมูลการเข้าด่าน", fg="red")
+        lbl_status.config(text="[!] No entry record found.", fg=ERROR)
         return
 
     entry_station = db[uid]['entry_station']
     balance = db[uid]['balance']
     
     if entry_station == selected_exit_station:
-         lbl_status.config(text=f"คุณเข้าจาก {entry_station}\nนี่คือสถานีเดิม ไม่คิดค่าบริการ", fg="blue")
-         lbl_log.config(text="Log (Thread C,D): ยกเลิกการหักเงิน (สถานีเดิม)", fg="blue")
+         lbl_status.config(text=f"Origin: {entry_station}\nNo charge (same station).", fg=TEXT_MAIN)
+         lbl_log.config(text="Transaction cancelled.", fg=TEXT_SUB)
          return # Stop here, don't deduct fee, don't clear entry
 
     toll_fee = calculate_toll(entry_station, selected_exit_station)
     
     if balance < toll_fee:
-        lbl_status.config(text=f"ยอดเงินไม่พอจ่ายค่าทางด่วน ({balance} บ. ขาดอีก {toll_fee-balance} บ.)", fg="red")
+        lbl_status.config(text=f"Insufficient balance.\n(Have {balance} / Need {toll_fee})", fg=ERROR)
     else:
-        lbl_status.config(text=f"เข้าจาก: {entry_station}\nค่าทางด่วน: {toll_fee} บ.\n>> เปิดไม้กั้นออก {selected_exit_station}", fg="green")
+        lbl_status.config(text=f"Origin: {entry_station}\nToll Fee: {toll_fee} THB\n\nGate Open → {selected_exit_station}", fg=SUCCESS)
         threading.Thread(target=process_cd_sync, args=(uid, toll_fee, selected_exit_station)).start()
 
 def sync_every_5_mins():
@@ -117,46 +117,172 @@ def nfc_loop():
 def btn_start():
     global is_reading
     is_reading = True
-    lbl_nfc_status.config(text="🟢 สถานะ: กำลังสแกนบัตร...", fg="green")
+    lbl_nfc_status.config(text="Scanning active...", fg=ACCENT)
 
 def btn_stop():
     global is_reading
     is_reading = False
-    lbl_nfc_status.config(text="🔴 สถานะ: หยุดสแกน", fg="red")
+    lbl_nfc_status.config(text="Scanner stopped.", fg=TEXT_SUB)
+
+def btn_mock_tap():
+    # Simulate a card tap for testing the UI
+    uid = "MOCK-1234"
+    db = ftp_manager.load_local_db()
+    
+    # Ensure they have an entry that is different from their exit to show the fee calculation
+    selected_exit = station_var.get()
+    mock_entry = "สถานี 1" if selected_exit != "สถานี 1" else "สถานี 4"
+    
+    db[uid] = {
+        "balance": 1000,
+        "entry_station": mock_entry
+    }
+    ftp_manager.save_local_db(db)
+    
+    # Trigger the logic
+    lbl_nfc_status.config(text="Simulating card tap...", fg=WARNING)
+    root.after(500, lambda: exit_toll_logic(uid))
 
 def fExit():
     root.destroy()
 
+# --- Minimalist Green Theme UI ---
+# Colors (Matcha/Sage Minimalist Mode)
+BG_COLOR = "#F4F7F4"         # Very soft warm green/gray background
+CARD_BG = "#FFFFFF"          # White - Elevated card background
+TEXT_MAIN = "#2C3E2D"        # Deep moss green for primary text
+TEXT_SUB = "#6B7A6F"         # Muted sage for secondary text
+ACCENT = "#52796F"           # Elegant muted green
+SUCCESS = "#40916C"          # Success green
+ERROR = "#D96C6C"            # Pastel red
+WARNING = "#F2B872"          # Soft warm yellow
+
+# Font setting
+FONT_FAMILY = "Segoe UI"
+
 root = tk.Tk()
-root.geometry("550x550")
-root.title("NFC Tollway - ด่านทางออก")
-tk.Label(root, text="ระบบด่านทางออก", font=("Arial", 20, "bold")).pack(pady=10)
+root.geometry("500x700")
+root.title("NFC Tollway - Modern")
+root.configure(bg=BG_COLOR)
+root.resizable(False, False)
 
-# Station Selection
-frame_station = tk.LabelFrame(root, text="เลือกสถานีทางออก")
-frame_station.pack(pady=10)
-station_var = tk.StringVar(value="") 
-tk.Radiobutton(frame_station, text="สถานี 1", variable=station_var, value="สถานี 1", font=("Arial", 12)).pack(side="left", padx=5)
-tk.Radiobutton(frame_station, text="สถานี 2", variable=station_var, value="สถานี 2", font=("Arial", 12)).pack(side="left", padx=5)
-tk.Radiobutton(frame_station, text="สถานี 3", variable=station_var, value="สถานี 3", font=("Arial", 12)).pack(side="left", padx=5)
-tk.Radiobutton(frame_station, text="สถานี 4", variable=station_var, value="สถานี 4", font=("Arial", 12)).pack(side="left", padx=5)
+# --- Header Section ---
+header_frame = tk.Frame(root, bg=BG_COLOR)
+header_frame.pack(fill="x", padx=25, pady=(20, 10))
 
+tk.Label(header_frame, text="EXIT STATION", font=(FONT_FAMILY, 12, "bold"), fg=ACCENT, bg=BG_COLOR).pack(anchor="w")
+tk.Label(header_frame, text="Motorway Free", font=(FONT_FAMILY, 26, "bold"), fg=TEXT_MAIN, bg=BG_COLOR).pack(anchor="w")
 
-frame_ctrl = tk.Frame(root)
-frame_ctrl.pack(pady=5)
-tk.Button(frame_ctrl, text="▶ Start NFC", bg="#ccffcc", font=("Arial", 12), command=btn_start).grid(row=0, column=0, padx=10)
-tk.Button(frame_ctrl, text="⏹ Stop NFC", bg="#ffcccc", font=("Arial", 12), command=btn_stop).grid(row=0, column=1, padx=10)
+# Bottom Exit Pill Base
+bottom_pill = tk.Frame(root, bg=BG_COLOR)
+bottom_pill.pack(side="bottom", fill="x", pady=10)
 
-lbl_nfc_status = tk.Label(root, text="🔴 สถานะ: หยุดสแกน", font=("Arial", 12, "bold"), fg="red")
-lbl_nfc_status.pack()
-tk.Label(root, text="-"*40).pack(pady=5)
-lbl_card = tk.Label(root, text="แตะบัตรเพื่ออ่าน...", font=("Arial", 16))
-lbl_card.pack()
-lbl_status = tk.Label(root, text="-", font=("Arial", 14, "bold"))
-lbl_status.pack(pady=15)
-lbl_log = tk.Label(root, text="Log (Thread C,D): รอการทำงาน", font=("Arial", 12), fg="blue")
-lbl_log.pack(pady=5)
-tk.Button(root, padx=16, pady=8, bd=8, fg="black", font=('Arial', 14, 'bold'), width=10, text="Exit", bg="#ffcccc", command=fExit).pack(side="bottom", pady=15)
+tk.Button(bottom_pill, text="EXIT", font=(FONT_FAMILY, 11, "bold"), command=fExit, 
+          bg="#E8ECE8", fg=TEXT_SUB, relief="flat", bd=0, cursor="hand2", 
+          activebackground=ERROR, activeforeground="#FFFFFF", width=35, pady=8
+          ).pack()
+
+# --- Content Area ---
+container_frame = tk.Frame(root, bg=BG_COLOR)
+container_frame.pack(fill="both", expand=True, padx=20)
+
+canvas = tk.Canvas(container_frame, bg=BG_COLOR, highlightthickness=0)
+scrollbar = tk.Scrollbar(container_frame, orient="vertical", command=canvas.yview)
+
+content_frame = tk.Frame(canvas, bg=BG_COLOR)
+
+content_frame.bind(
+    "<Configure>",
+    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+)
+
+canvas_window = canvas.create_window((0, 0), window=content_frame, anchor="nw")
+
+def _on_canvas_configure(event):
+    canvas.itemconfig(canvas_window, width=event.width)
+canvas.bind("<Configure>", _on_canvas_configure)
+
+def _on_mousewheel(event):
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+canvas.configure(yscrollcommand=scrollbar.set)
+canvas.pack(side="left", fill="both", expand=True)
+scrollbar.pack(side="right", fill="y")
+
+# 1. Station Selection Card
+card1 = tk.Frame(content_frame, bg=CARD_BG, padx=20, pady=15)
+card1.pack(fill="x", pady=(5, 10))
+
+tk.Label(card1, text="Select Exit Station", font=(FONT_FAMILY, 14, "bold"), fg=TEXT_MAIN, bg=CARD_BG).pack(anchor="w", pady=(0, 10))
+
+station_var = tk.StringVar(value="")
+stations_frame = tk.Frame(card1, bg=CARD_BG)
+stations_frame.pack(fill="x")
+
+def select_station(val, btn_ref):
+    if station_var.get() == val:
+        # If already selected, unselect it
+        station_var.set("")
+    else:
+        station_var.set(val)
+    
+    # Update UI for all buttons based on selection
+    for b_val, b_widget in station_buttons.items():
+        if station_var.get() == b_val:
+            b_widget.config(bg=ACCENT, fg="#FFFFFF") # Selected state
+        else:
+            b_widget.config(bg=CARD_BG, fg=TEXT_MAIN) # Unselected state
+
+station_buttons = {}
+for val in ["สถานี 1", "สถานี 2", "สถานี 3", "สถานี 4"]:
+    btn = tk.Button(stations_frame, text=val, font=(FONT_FAMILY, 12, "bold"), 
+                   bg=CARD_BG, fg=TEXT_MAIN, activebackground=BG_COLOR, activeforeground=ACCENT,
+                   cursor="hand2", highlightthickness=0, bd=0, relief="flat")
+    btn.config(command=lambda v=val, b=btn: select_station(v, b))
+    btn.pack(side="left", expand=True, fill="x", padx=4, ipady=5)
+    station_buttons[val] = btn
+
+# 2. Scanner Controls Card
+card2 = tk.Frame(content_frame, bg=CARD_BG, padx=20, pady=15)
+card2.pack(fill="x", pady=5)
+
+tk.Label(card2, text="Scanner Controls", font=(FONT_FAMILY, 14, "bold"), fg=TEXT_MAIN, bg=CARD_BG).pack(anchor="w", pady=(0, 10))
+
+ctrl_frame = tk.Frame(card2, bg=CARD_BG)
+ctrl_frame.pack(fill="x")
+
+# Big bold buttons
+tk.Button(ctrl_frame, text="START NFC", bg=SUCCESS, fg="#FFFFFF", font=(FONT_FAMILY, 12, "bold"), 
+          command=btn_start, relief="flat", cursor="hand2", activebackground="#059669", activeforeground="white", bd=0
+          ).pack(side="left", expand=True, fill="x", padx=(0, 5), ipady=8)
+
+tk.Button(ctrl_frame, text="STOP", bg=ERROR, fg="#FFFFFF", font=(FONT_FAMILY, 12, "bold"), 
+          command=btn_stop, relief="flat", cursor="hand2", activebackground="#DC2626", activeforeground="white", bd=0
+          ).pack(side="right", expand=True, fill="x", padx=(5, 0), ipady=8)
+
+lbl_nfc_status = tk.Label(card2, text="Scanner is stopped", font=(FONT_FAMILY, 11), bg=CARD_BG, fg=TEXT_SUB)
+lbl_nfc_status.pack(pady=(10, 5))
+
+# Mock Button
+tk.Button(card2, text="🧪 MOCK TAP CARD", bg="#E8ECE8", fg=TEXT_MAIN, font=(FONT_FAMILY, 10, "bold"), 
+          command=btn_mock_tap, relief="flat", cursor="hand2", activebackground=ACCENT, activeforeground="white", bd=0
+          ).pack(fill="x", ipady=5)
+
+# 3. Status display Card
+card3 = tk.Frame(content_frame, bg=CARD_BG, padx=20, pady=15)
+card3.pack(fill="both", expand=True, pady=(5, 5))
+
+lbl_card = tk.Label(card3, text="Waiting for card tap...", font=(FONT_FAMILY, 12), bg=CARD_BG, fg=TEXT_SUB)
+lbl_card.pack(pady=(5, 5))
+
+lbl_status = tk.Label(card3, text="-", font=(FONT_FAMILY, 16, "bold"), bg=CARD_BG, fg=TEXT_MAIN, wraplength=380, justify="center")
+lbl_status.pack(pady=10, expand=True)
+
+lbl_log = tk.Label(card3, text="System ready", font=(FONT_FAMILY, 10), bg=CARD_BG, fg=TEXT_SUB, wraplength=400, justify="center")
+lbl_log.pack(side="bottom", pady=(5, 0))
+
+# Bottom exit pill moved above content frame to prevent layout shifting
 
 threading.Thread(target=nfc_loop, daemon=True).start()
 threading.Thread(target=sync_every_5_mins, daemon=True).start()

@@ -2,8 +2,8 @@ import json
 import os
 from ftplib import FTP
 
-FTP_HOST = '158.108.97.1287' 
-FTP_USER = 'st036034230'  
+FTP_HOST = '158.108.98.128'
+FTP_USER = 'st03603423'  
 FTP_PASS = 'st03603423'      
 
 # 1. กำหนดชื่อโฟลเดอร์ที่ต้องการเก็บข้อมูล (แก้ชื่อโฟลเดอร์ตรงนี้ได้เลย)
