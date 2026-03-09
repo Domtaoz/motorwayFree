@@ -59,7 +59,7 @@ def check_card_logic(uid):
         entry_otp.delete(0, 'end')
         entry_topup.config(state="normal")
         entry_topup.delete(0, 'end')
-    # -----------------------------------------------------------
+    # ---------------------------------------------------
 
     current_uid = uid
     lbl_msg.config(text="⚡ กำลังดึงข้อมูลบัตร...", fg="blue") 

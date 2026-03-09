@@ -144,7 +144,7 @@ def nfc_loop():
         print(f"NFC Error: {e}")
 
 # --- Minimalist Green Theme UI ---
-# Colors (Matcha/Sage Minimalist Mode)
+# Colors 
 BG_COLOR = "#F4F7F4"
 CARD_BG = "#FFFFFF"
 TEXT_MAIN = "#2C3E2D"

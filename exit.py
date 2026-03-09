@@ -67,7 +67,7 @@ def exit_toll_logic(uid):
     if entry_station == selected_exit_station:
          lbl_status.config(text=f"คุณเข้าจาก {entry_station}\nนี่คือสถานีเดิม ไม่คิดค่าบริการ", fg=TEXT_MAIN)
          lbl_log.config(text="Log (Thread C,D): ยกเลิกการหักเงิน (สถานีเดิม)", fg=TEXT_SUB)
-         return # Stop here, don't deduct fee, don't clear entry
+         return 
 
     toll_fee = calculate_toll(entry_station, selected_exit_station)
     
