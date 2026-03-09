@@ -10,7 +10,7 @@ is_reading = False
 need_sync = False
 
 def calculate_toll(entry_station, exit_station):
-    # Extract numbers from strings like "สถานี 1"
+    # Extract numbers from strings like "Station 1"
     try:
         entry_num = int(entry_station.split()[1])
         exit_num = int(exit_station.split()[1])
@@ -42,39 +42,39 @@ def process_cd_sync(uid, fee, exit_station):
         need_sync = True 
         
     try:
-        root.after(0, lambda: lbl_log.config(text=f"[✓] Deducted: {fee} THB. Pending sync.", fg=SUCCESS))
+        root.after(0, lambda: lbl_log.config(text=f"Log (Thread C,D): ✅ หักเงิน {fee} บ. และรอส่ง FTP รอบถัดไป", fg=SUCCESS))
     except RuntimeError: pass
 
 def exit_toll_logic(uid):
     selected_exit_station = station_var.get()
     
     if not selected_exit_station:
-        lbl_status.config(text="Please select a station first.", fg=WARNING)
-        lbl_log.config(text="-", fg=TEXT_SUB)
+        lbl_status.config(text="⚠️ กรุณาเลือกสถานีก่อนสแกนบัตร", fg=WARNING)
+        lbl_log.config(text="Log (Thread C,D): รอการทำงาน", fg=TEXT_SUB)
         return
 
-    lbl_log.config(text="Processing card...", fg=ACCENT)
+    lbl_log.config(text="Log (Thread C,D): ⚙ กำลังประมวลผลบัตรใหม่...", fg=ACCENT)
     db = ftp_manager.load_local_db()
-    lbl_card.config(text=f"UID: {uid}")
+    lbl_card.config(text=f"Card ID: {uid}")
     
     if uid not in db or not db[uid].get('entry_station'):
-        lbl_status.config(text="[!] No entry record found.", fg=ERROR)
+        lbl_status.config(text="ไม่พบข้อมูลการเข้าด่าน", fg=ERROR)
         return
 
     entry_station = db[uid]['entry_station']
     balance = db[uid]['balance']
     
     if entry_station == selected_exit_station:
-         lbl_status.config(text=f"Origin: {entry_station}\nNo charge (same station).", fg=TEXT_MAIN)
-         lbl_log.config(text="Transaction cancelled.", fg=TEXT_SUB)
+         lbl_status.config(text=f"คุณเข้าจาก {entry_station}\nนี่คือสถานีเดิม ไม่คิดค่าบริการ", fg=TEXT_MAIN)
+         lbl_log.config(text="Log (Thread C,D): ยกเลิกการหักเงิน (สถานีเดิม)", fg=TEXT_SUB)
          return # Stop here, don't deduct fee, don't clear entry
 
     toll_fee = calculate_toll(entry_station, selected_exit_station)
     
     if balance < toll_fee:
-        lbl_status.config(text=f"Insufficient balance.\n(Have {balance} / Need {toll_fee})", fg=ERROR)
+        lbl_status.config(text=f"ยอดเงินไม่พอจ่ายค่าทางด่วน ({balance} บ. ขาดอีก {toll_fee-balance} บ.)", fg=ERROR)
     else:
-        lbl_status.config(text=f"Origin: {entry_station}\nToll Fee: {toll_fee} THB\n\nGate Open → {selected_exit_station}", fg=SUCCESS)
+        lbl_status.config(text=f"เข้าจาก: {entry_station}\nค่าทางด่วน: {toll_fee} บ.\n>> เปิดไม้กั้นออก {selected_exit_station}", fg=SUCCESS)
         threading.Thread(target=process_cd_sync, args=(uid, toll_fee, selected_exit_station)).start()
 
 def sync_every_5_mins():
@@ -117,31 +117,12 @@ def nfc_loop():
 def btn_start():
     global is_reading
     is_reading = True
-    lbl_nfc_status.config(text="Scanning active...", fg=ACCENT)
+    lbl_nfc_status.config(text="🟢 สถานะ: กำลังสแกนบัตร...", fg=ACCENT)
 
 def btn_stop():
     global is_reading
     is_reading = False
-    lbl_nfc_status.config(text="Scanner stopped.", fg=TEXT_SUB)
-
-def btn_mock_tap():
-    # Simulate a card tap for testing the UI
-    uid = "MOCK-1234"
-    db = ftp_manager.load_local_db()
-    
-    # Ensure they have an entry that is different from their exit to show the fee calculation
-    selected_exit = station_var.get()
-    mock_entry = "สถานี 1" if selected_exit != "สถานี 1" else "สถานี 4"
-    
-    db[uid] = {
-        "balance": 1000,
-        "entry_station": mock_entry
-    }
-    ftp_manager.save_local_db(db)
-    
-    # Trigger the logic
-    lbl_nfc_status.config(text="Simulating card tap...", fg=WARNING)
-    root.after(500, lambda: exit_toll_logic(uid))
+    lbl_nfc_status.config(text="🔴 สถานะ: หยุดสแกน", fg=TEXT_SUB)
 
 def fExit():
     root.destroy()
@@ -171,7 +152,7 @@ header_frame = tk.Frame(root, bg=BG_COLOR)
 header_frame.pack(fill="x", padx=25, pady=(20, 10))
 
 tk.Label(header_frame, text="EXIT STATION", font=(FONT_FAMILY, 12, "bold"), fg=ACCENT, bg=BG_COLOR).pack(anchor="w")
-tk.Label(header_frame, text="Motorway Free", font=(FONT_FAMILY, 26, "bold"), fg=TEXT_MAIN, bg=BG_COLOR).pack(anchor="w")
+tk.Label(header_frame, text="Exit System", font=(FONT_FAMILY, 26, "bold"), fg=TEXT_MAIN, bg=BG_COLOR).pack(anchor="w")
 
 # Bottom Exit Pill Base
 bottom_pill = tk.Frame(root, bg=BG_COLOR)
@@ -264,22 +245,17 @@ tk.Button(ctrl_frame, text="STOP", bg=ERROR, fg="#FFFFFF", font=(FONT_FAMILY, 12
 lbl_nfc_status = tk.Label(card2, text="Scanner is stopped", font=(FONT_FAMILY, 11), bg=CARD_BG, fg=TEXT_SUB)
 lbl_nfc_status.pack(pady=(10, 5))
 
-# Mock Button
-tk.Button(card2, text="🧪 MOCK TAP CARD", bg="#E8ECE8", fg=TEXT_MAIN, font=(FONT_FAMILY, 10, "bold"), 
-          command=btn_mock_tap, relief="flat", cursor="hand2", activebackground=ACCENT, activeforeground="white", bd=0
-          ).pack(fill="x", ipady=5)
-
 # 3. Status display Card
 card3 = tk.Frame(content_frame, bg=CARD_BG, padx=20, pady=15)
 card3.pack(fill="both", expand=True, pady=(5, 5))
 
-lbl_card = tk.Label(card3, text="Waiting for card tap...", font=(FONT_FAMILY, 12), bg=CARD_BG, fg=TEXT_SUB)
+lbl_card = tk.Label(card3, text="แตะบัตรเพื่ออ่าน...", font=(FONT_FAMILY, 12), bg=CARD_BG, fg=TEXT_SUB)
 lbl_card.pack(pady=(5, 5))
 
 lbl_status = tk.Label(card3, text="-", font=(FONT_FAMILY, 16, "bold"), bg=CARD_BG, fg=TEXT_MAIN, wraplength=380, justify="center")
 lbl_status.pack(pady=10, expand=True)
 
-lbl_log = tk.Label(card3, text="System ready", font=(FONT_FAMILY, 10), bg=CARD_BG, fg=TEXT_SUB, wraplength=400, justify="center")
+lbl_log = tk.Label(card3, text="Log (Thread C,D): รอการทำงาน", font=(FONT_FAMILY, 10), bg=CARD_BG, fg=TEXT_SUB, wraplength=400, justify="center")
 lbl_log.pack(side="bottom", pady=(5, 0))
 
 # Bottom exit pill moved above content frame to prevent layout shifting

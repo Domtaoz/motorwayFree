@@ -2,6 +2,8 @@ pip install pyscard
 
 folder motorwayFree
 
+get database.json con
+
 spok yxyq gjtr iitc 
 
 FTP_HOST = '158.108.98.128'

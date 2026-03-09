@@ -1,0 +1,19 @@
+{
+    "56632303": {
+        "email": "domdypol@gmail.com",
+        "balance": 500.0,
+        "entry_station": "",
+        "transactions": [
+            "[11:13:33] ลงทะเบียนบัตร",
+            "[11:13:39] เติมเงิน +500.0 บาท"
+        ]
+    },
+    "MOCK-1234": {
+        "balance": 850,
+        "entry_station": "Station 1",
+        "transactions": [
+            "[18:46:57] ออกด่าน: Station 1 (จาก Station 4) หัก -150 บาท",
+            "[18:57:55] เข้าด่าน: Station 1"
+        ]
+    }
+}
