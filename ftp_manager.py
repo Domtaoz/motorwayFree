@@ -2,7 +2,7 @@ import json
 import os
 from ftplib import FTP
 
-FTP_HOST = '158.108.98.128' 
+FTP_HOST = '158.108.98.128'
 FTP_USER = 'st03603423'  
 FTP_PASS = 'st03603423'      
 
