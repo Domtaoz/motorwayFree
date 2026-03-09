@@ -33,7 +33,7 @@ def process_cd_sync(uid, fee, exit_station):
     if uid in db:
         entry_station = db[uid].get('entry_station', 'ไม่ระบุ')
         db[uid]['balance'] -= fee
-        db[uid]['entry_station'] = "" # Clear status
+        db[uid]['entry_station'] = "" 
         
         if 'transactions' not in db[uid]: db[uid]['transactions'] = []
         db[uid]['transactions'].append(f"[{time.strftime('%H:%M:%S')}] ออกด่าน: {exit_station} (จาก {entry_station}) หัก -{fee} บาท")

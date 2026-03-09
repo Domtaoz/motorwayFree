@@ -311,7 +311,7 @@ em_frame = tk.Frame(card3, bg=CARD_BG)
 em_frame.pack(fill="x", pady=(5, 10))
 entry_email = tk.Entry(em_frame, state="disabled", font=(FONT_FAMILY, 11), bg="#F4F7F4", fg=TEXT_MAIN, relief="flat", highlightthickness=1, highlightbackground="#D1D5DB")
 entry_email.pack(side="left", fill="both", expand=True, padx=(0, 5), ipady=5)
-btn_send_otp = tk.Button(em_frame, text="Get OTP", state="disabled", command=handle_send_otp, font=(FONT_FAMILY, 10, "bold"), bg=ACCENT, fg="white", relief="flat", cursor="hand2", bd=0)
+btn_send_otp = tk.Button(em_frame, text="Get OTP", state="disabled", command=handle_send_otp, font=(FONT_FAMILY, 10, "bold"), bg=ACCENT, fg="white", disabledforeground="white", relief="flat", cursor="hand2", bd=0)
 btn_send_otp.pack(side="right", ipady=5, ipadx=5)
 
 # OTP Block
@@ -320,7 +320,7 @@ otp_frame = tk.Frame(card3, bg=CARD_BG)
 otp_frame.pack(fill="x", pady=(5, 5))
 entry_otp = tk.Entry(otp_frame, state="disabled", font=(FONT_FAMILY, 11), bg="#F4F7F4", fg=TEXT_MAIN, relief="flat", highlightthickness=1, highlightbackground="#D1D5DB")
 entry_otp.pack(side="left", fill="both", expand=True, padx=(0, 5), ipady=5)
-btn_verify_otp = tk.Button(otp_frame, text="Verify", state="disabled", command=handle_verify_otp, font=(FONT_FAMILY, 10, "bold"), bg=SUCCESS, fg="white", relief="flat", cursor="hand2", bd=0)
+btn_verify_otp = tk.Button(otp_frame, text="Verify", state="disabled", command=handle_verify_otp, font=(FONT_FAMILY, 10, "bold"), bg=SUCCESS, fg="white", disabledforeground="white", relief="flat", cursor="hand2", bd=0)
 btn_verify_otp.pack(side="right", ipady=5, ipadx=5)
 
 # 4. Top-up Card
@@ -334,7 +334,7 @@ topup_frame = tk.Frame(card4, bg=CARD_BG)
 topup_frame.pack(fill="x", pady=(5, 5))
 entry_topup = tk.Entry(topup_frame, state="disabled", font=(FONT_FAMILY, 11), bg="#F4F7F4", fg=TEXT_MAIN, relief="flat", highlightthickness=1, highlightbackground="#D1D5DB")
 entry_topup.pack(side="left", fill="both", expand=True, padx=(0, 5), ipady=5)
-btn_topup = tk.Button(topup_frame, text="Top-up", state="disabled", command=handle_topup, font=(FONT_FAMILY, 10, "bold"), bg=SUCCESS, fg="white", relief="flat", cursor="hand2", bd=0)
+btn_topup = tk.Button(topup_frame, text="Top-up", state="disabled", command=handle_topup, font=(FONT_FAMILY, 10, "bold"), bg=SUCCESS, fg="white", disabledforeground="white", relief="flat", cursor="hand2", bd=0)
 btn_topup.pack(side="right", ipady=5, ipadx=5)
 
 threading.Thread(target=nfc_loop, daemon=True).start()

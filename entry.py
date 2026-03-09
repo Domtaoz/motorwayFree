@@ -143,7 +143,6 @@ def nfc_loop():
     except Exception as e: 
         print(f"NFC Error: {e}")
 
-# --- Minimalist Green Theme UI ---
 # Colors 
 BG_COLOR = "#F4F7F4"
 CARD_BG = "#FFFFFF"
@@ -183,7 +182,7 @@ root.title("NFC Tollway - Entry System")
 root.configure(bg=BG_COLOR)
 root.resizable(False, False)
 
-# --- Header Section ---
+# --- Header Section -
 header_frame = tk.Frame(root, bg=BG_COLOR)
 header_frame.pack(fill="x", padx=25, pady=(20, 10))
 
