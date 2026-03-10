@@ -4,9 +4,8 @@ import time
 
 VERBOSE = False
 
-# Constants and APDU Commands
 BLOCK_NUMBER = 0x04
-AUTHENTICATE = [0xFF, 0x88, 0x00, BLOCK_NUMBER, 0x60, 0x00] # ใช้ Key A (0x60)
+AUTHENTICATE = [0xFF, 0x88, 0x00, BLOCK_NUMBER, 0x60, 0x00] 
 GET_UID = [0xFF, 0xCA, 0x00, 0x00, 0x00]
 READ_16_BINARY_BLOCKS = [0xFF, 0xB0, 0x00, BLOCK_NUMBER, 0x10]
 
@@ -70,7 +69,6 @@ class NFC_Reader():
 
         update_command = [0xFF, 0xD6, 0x00, BLOCK_NUMBER, 0x10]
         
-        # เติมข้อมูลให้ครบ 16 bytes (Padding ด้วย 0x00)
         padded_array = int_array + [0x00] * (16 - len(int_array))
         update_command.extend(padded_array)
 
@@ -80,12 +78,12 @@ class NFC_Reader():
             print("[Success] Authentication successful.")
             res, val = self.send_command(update_command)
             if res == [144, 0]:
-                print(f"[Success] เขียนข้อมูล '{string}' ลงบัตรสำเร็จ")
+                print(f"[Success] write '{string}' successfully!")
                 return True
             else:
-                print("[Error] เขียนข้อมูลล้มเหลว")
+                print("[Error] Failed to write data")
         else:
-            print("[Error] Unable to authenticate. เช็ค Key หรือ Block Number")
+            print("[Error] Unable to authenticate. Please check the key or block number")
         return False
 
     def read_data(self):
@@ -112,4 +110,4 @@ if __name__ == '__main__':
     reader = NFC_Reader()
     if reader.reader:
         uid = reader.read_uid()
-        print(f"นำข้อมูลนี้ไปใช้ map กับ รหัสนิสิต : {uid}")
+        print(f"UID: {uid}")

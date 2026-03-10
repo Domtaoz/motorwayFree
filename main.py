@@ -4,7 +4,6 @@ import time
 from smartcard.System import readers
 from smartcard.util import toHexString
 
-# Import the refactored apps
 import entry
 import exit
 import seven_eleven
@@ -13,7 +12,6 @@ from exit import ExitApp
 from seven_eleven import SevenElevenApp
 import ftp_manager
 
-# Colors (Consistent with the apps)
 BG_COLOR = "#F4F7F4"
 CARD_BG = "#FFFFFF"
 TEXT_MAIN = "#2C3E2D"
@@ -39,7 +37,6 @@ class MainApplication:
         self.main_container = tk.Frame(self.root, bg=BG_COLOR)
         self.main_container.pack(fill="both", expand=True)
 
-        # Bottom Exit Pill
         bottom_pill = tk.Frame(self.root, bg=BG_COLOR)
         bottom_pill.pack(side="bottom", fill="x", pady=10)
 
@@ -49,15 +46,12 @@ class MainApplication:
                   activebackground=ERROR, activeforeground="#FFFFFF", width=35, pady=8
                   ).pack()
 
-        # Start NFC Thread
         self.nfc_thread = threading.Thread(target=self.global_nfc_loop, daemon=True)
         self.nfc_thread.start()
 
-        # Start Sync Thread
         self.sync_thread = threading.Thread(target=self.global_sync_loop, daemon=True)
         self.sync_thread.start()
 
-        # Default view
         self.show_entry()
 
     def setup_navigation(self):
@@ -111,18 +105,15 @@ class MainApplication:
     def global_sync_loop(self):
         while True:
             time.sleep(15)
-            # Check if any app needs sync
             if entry.need_sync or exit.need_sync or seven_eleven.need_sync:
                 print(f"[{time.strftime('%H:%M:%S')}] Global Sync: Syncing database...")
                 try:
-                    # Using entry.db_lock if it exists, or just calling upload
                     if hasattr(entry, 'db_lock'):
                         with entry.db_lock:
                             ftp_manager.upload_db()
                     else:
                         ftp_manager.upload_db()
                     
-                    # Reset all sync flags
                     entry.need_sync = False
                     exit.need_sync = False
                     seven_eleven.need_sync = False
@@ -158,7 +149,7 @@ class MainApplication:
                             if self.active_app_instance and hasattr(self.active_app_instance, 'handle_nfc_uid'):
                                 self.root.after(0, self.active_app_instance.handle_nfc_uid, uid)
                             last_uid = uid
-                            time.sleep(1.5) # Debounce
+                            time.sleep(1.5)
                     else:
                         last_uid = ""
                 except Exception:

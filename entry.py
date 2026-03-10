@@ -10,12 +10,10 @@ from smartcard.util import toHexString
 is_reading = False
 need_sync = False
 
-# 1. เพิ่ม Lock สำหรับจัดการไฟล์ ป้องกันไฟล์พังจากการแย่งกันอ่าน/เขียน
 db_lock = threading.Lock()
 
-# 2. เพิ่ม Dictionary เก็บเวลาที่แตะบัตรล่าสุดของแต่ละ UID (Debounce/Cooldown)
 nfc_cooldowns = {}
-COOLDOWN_SECONDS = 5 # ห้ามแตะบัตรใบเดิมซ้ำภายใน 5 วินาที
+COOLDOWN_SECONDS = 5 
 
 def sync_every_5_mins():
     global need_sync
@@ -23,7 +21,6 @@ def sync_every_5_mins():
         time.sleep(15)
         if need_sync:
             try:
-                # ล็อคก่อนจะอัปโหลด เพื่อไม่ให้ชนกับการเขียน DB ข้างล่าง
                 with db_lock:
                     ftp_manager.upload_db()
                 need_sync = False 
@@ -63,7 +60,6 @@ def nfc_loop():
     except Exception as e: 
         print(f"NFC Error: {e}")
 
-# Colors 
 BG_COLOR = "#F4F7F4"
 CARD_BG = "#FFFFFF"
 TEXT_MAIN = "#2C3E2D"
@@ -73,7 +69,6 @@ SUCCESS = "#40916C"
 ERROR = "#D96C6C"
 WARNING = "#F2B872"
 
-# Font setting
 FONT_FAMILY = "Segoe UI"
 
 class EntryApp:
@@ -86,14 +81,12 @@ class EntryApp:
         self.setup_ui()
 
     def setup_ui(self):
-        # --- Header Section -
         self.header_frame = tk.Frame(self.parent, bg=BG_COLOR)
         self.header_frame.pack(fill="x", padx=25, pady=(20, 10))
 
         tk.Label(self.header_frame, text="ENTRY STATION", font=(FONT_FAMILY, 12, "bold"), fg=ACCENT, bg=BG_COLOR).pack(anchor="w")
         tk.Label(self.header_frame, text="Entry System", font=(FONT_FAMILY, 26, "bold"), fg=TEXT_MAIN, bg=BG_COLOR).pack(anchor="w")
 
-        # --- Content Area ---
         self.container_frame = tk.Frame(self.parent, bg=BG_COLOR)
         self.container_frame.pack(fill="both", expand=True, padx=20)
 
@@ -121,7 +114,6 @@ class EntryApp:
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
-        # 1. Station Selection Card
         self.card1 = tk.Frame(self.content_frame, bg=CARD_BG, padx=20, pady=15)
         self.card1.pack(fill="x", pady=(5, 10))
 
@@ -130,7 +122,7 @@ class EntryApp:
         self.stations_frame = tk.Frame(self.card1, bg=CARD_BG)
         self.stations_frame.pack(fill="x")
 
-        for val in ["สถานี 1", "สถานี 2", "สถานี 3", "สถานี 4"]:
+        for val in ["Station 1", "Station 2", "Station 3", "Station 4"]:
             btn = tk.Button(self.stations_frame, text=val, font=(FONT_FAMILY, 12, "bold"), 
                            bg=CARD_BG, fg=TEXT_MAIN, activebackground=BG_COLOR, activeforeground=ACCENT,
                            cursor="hand2", highlightthickness=0, bd=0, relief="flat")
@@ -138,7 +130,6 @@ class EntryApp:
             btn.pack(side="left", expand=True, fill="x", padx=4, ipady=5)
             self.station_buttons[val] = btn
 
-        # 2. Scanner Controls Card
         self.card2 = tk.Frame(self.content_frame, bg=CARD_BG, padx=20, pady=15)
         self.card2.pack(fill="x", pady=5)
 
@@ -155,20 +146,19 @@ class EntryApp:
                   command=self.btn_stop, relief="flat", cursor="hand2", activebackground="#DC2626", activeforeground="white", bd=0
                   ).pack(side="right", expand=True, fill="x", padx=(5, 0), ipady=8)
 
-        self.lbl_nfc_status = tk.Label(self.card2, text="Scanner is stopped", font=(FONT_FAMILY, 11), bg=CARD_BG, fg=TEXT_SUB)
+        self.lbl_nfc_status = tk.Label(self.card2, text="Scanner stopped", font=(FONT_FAMILY, 11), bg=CARD_BG, fg=TEXT_SUB)
         self.lbl_nfc_status.pack(pady=(10, 5))
 
-        # 3. Status display Card
         self.card3 = tk.Frame(self.content_frame, bg=CARD_BG, padx=20, pady=15)
         self.card3.pack(fill="both", expand=True, pady=(5, 5))
 
-        self.lbl_card = tk.Label(self.card3, text="แตะบัตรเพื่ออ่าน...", font=(FONT_FAMILY, 12), bg=CARD_BG, fg=TEXT_SUB)
+        self.lbl_card = tk.Label(self.card3, text="Tap card to read...", font=(FONT_FAMILY, 12), bg=CARD_BG, fg=TEXT_SUB)
         self.lbl_card.pack(pady=(5, 5))
 
         self.lbl_status = tk.Label(self.card3, text="-", font=(FONT_FAMILY, 16, "bold"), bg=CARD_BG, fg=TEXT_MAIN, wraplength=380, justify="center")
         self.lbl_status.pack(pady=10, expand=True)
 
-        self.lbl_log = tk.Label(self.card3, text="Log (Thread C): รอการทำงาน", font=(FONT_FAMILY, 10), bg=CARD_BG, fg=TEXT_SUB, wraplength=400, justify="center")
+        self.lbl_log = tk.Label(self.card3, text="Log (Thread C): Waiting for action", font=(FONT_FAMILY, 10), bg=CARD_BG, fg=TEXT_SUB, wraplength=400, justify="center")
         self.lbl_log.pack(side="bottom", pady=(5, 0))
 
     def select_station(self, val, btn_ref):
@@ -185,11 +175,11 @@ class EntryApp:
 
     def btn_start(self):
         self.is_reading = True
-        self.lbl_nfc_status.config(text="[Status] กำลังสแกนบัตร...", fg=ACCENT)
+        self.lbl_nfc_status.config(text="[Status] Scanning card...", fg=ACCENT)
 
     def btn_stop(self):
         self.is_reading = False
-        self.lbl_nfc_status.config(text="[Status] หยุดสแกน", fg=TEXT_SUB)
+        self.lbl_nfc_status.config(text="[Status] Scanner stopped", fg=TEXT_SUB)
 
     def toggle_station_ui(self, state):
         for btn in self.station_buttons.values():
@@ -204,46 +194,46 @@ class EntryApp:
         current_time = time.time()
         
         if not selected_station:
-            self.lbl_status.config(text="[Warning] กรุณาเลือกสถานีก่อนสแกนบัตร", fg=WARNING)
-            self.lbl_log.config(text="Log (Thread C): รอการทำงาน", fg=TEXT_SUB)
+            self.lbl_status.config(text="[Warning] Please select a station before scanning", fg=WARNING)
+            self.lbl_log.config(text="Log (Thread C): Waiting for action", fg=TEXT_SUB)
             return
 
         if uid in nfc_cooldowns:
             if current_time - nfc_cooldowns[uid] < COOLDOWN_SECONDS:
-                self.lbl_status.config(text="[Warning] แตะบัตรเร็วเกินไป กรุณารอสักครู่", fg=WARNING)
+                self.lbl_status.config(text="[Warning] Tapped too fast. Please wait a moment.", fg=WARNING)
                 return
         
         nfc_cooldowns[uid] = current_time
         self.toggle_station_ui(tk.DISABLED)
-        self.lbl_log.config(text="Log (Thread C): [Info] กำลังประมวลผลบัตรใหม่...", fg=ACCENT)
+        self.lbl_log.config(text="Log (Thread C): [Info] Processing new card...", fg=ACCENT)
         
         try:
             with db_lock:
                 db = ftp_manager.load_local_db()
         except Exception as e:
-            self.lbl_status.config(text="[Error] ไม่สามารถโหลดฐานข้อมูลได้", fg=ERROR)
+            self.lbl_status.config(text="[Error] Unable to load database", fg=ERROR)
             self.toggle_station_ui(tk.NORMAL)
             return
 
         self.lbl_card.config(text=f"Card ID: {uid}")
         
         if uid not in db:
-            self.lbl_status.config(text="บัตรยังไม่ลงทะเบียน", fg=ERROR)
+            self.lbl_status.config(text="Card not registered", fg=ERROR)
             self.toggle_station_ui(tk.NORMAL)
             return
 
         balance = db.get(uid, {}).get('balance', 0)
         
         if db[uid].get('entry_station'):
-             self.lbl_status.config(text=f"บัตรนี้เข้าด่านแล้ว ({db[uid]['entry_station']}) กรุณาออกด่านก่อน", fg=ERROR)
+             self.lbl_status.config(text=f"Already entered at {db[uid]['entry_station']}. Please exit first.", fg=ERROR)
              self.toggle_station_ui(tk.NORMAL)
              return
 
         if balance < 200:
-            self.lbl_status.config(text=f"ยอดเงินไม่พอ! ({balance} บ.) ไม่เปิดไม้กั้น", fg=ERROR)
+            self.lbl_status.config(text=f"Insufficient balance! ({balance} THB) Gate locked", fg=ERROR)
             self.toggle_station_ui(tk.NORMAL)
         else:
-            self.lbl_status.config(text=f"ยอดเงิน {balance} บ. >> เปิดไม้กั้นเข้า {selected_station}", fg=SUCCESS)
+            self.lbl_status.config(text=f"Balance: {balance} THB >> Gate opened: {selected_station}", fg=SUCCESS)
             threading.Thread(target=self.process_c_sync, args=(uid, selected_station), daemon=True).start()
 
     def process_c_sync(self, uid, station):
@@ -255,15 +245,15 @@ class EntryApp:
                     db[uid]['entry_station'] = station
                     if 'transactions' not in db[uid]: 
                         db[uid]['transactions'] = []
-                    db[uid]['transactions'].append(f"[{time.strftime('%H:%M:%S')}] เข้าด่าน: {station}")
+                    db[uid]['transactions'].append(f"[{time.strftime('%H:%M:%S')}] Entered: {station}")
                     
                     ftp_manager.save_local_db(db)
                     need_sync = True 
                     
-            self.root.after(0, lambda: self.lbl_log.config(text=f"Log (Thread C): [Success] บันทึกเข้าด่าน ({station}) รอส่ง FTP", fg=SUCCESS))
+            self.root.after(0, lambda: self.lbl_log.config(text=f"Log (Thread C): [Success] Entry recorded ({station}), waiting for FTP sync", fg=SUCCESS))
         except Exception as e:
             print(f"Error in process_c_sync: {e}")
-            self.root.after(0, lambda: self.lbl_log.config(text=f"Log (Thread C): [Error] เกิดข้อผิดพลาดในการบันทึก", fg=ERROR))
+            self.root.after(0, lambda: self.lbl_log.config(text=f"Log (Thread C): [Error] Failed to record entry", fg=ERROR))
         finally:
             self.root.after(0, self.toggle_station_ui, tk.NORMAL)
 
@@ -292,7 +282,6 @@ def nfc_loop(callback_obj):
         last_uid = ""
         
         while True:
-            # We use a global is_reading or check the callback_obj's state
             if hasattr(callback_obj, 'is_reading') and not callback_obj.is_reading:
                 last_uid = ""
                 time.sleep(0.5)
@@ -324,7 +313,6 @@ if __name__ == "__main__":
     root.configure(bg=BG_COLOR)
     root.resizable(False, False)
 
-    # Bottom Exit Pill Base
     bottom_pill = tk.Frame(root, bg=BG_COLOR)
     bottom_pill.pack(side="bottom", fill="x", pady=10)
 

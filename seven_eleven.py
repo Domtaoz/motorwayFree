@@ -10,25 +10,23 @@ from smartcard.System import readers
 from smartcard.util import toHexString
 
 SENDER_EMAIL = "pollapat.r@ku.th" 
-APP_PASSWORD = "spok yxyq gjtr iitc "
+APP_PASSWORD = "spok yxyq gjtr iitc"
 
 current_uid = ""
 generated_otp = ""
 registering_uid = "" 
 is_reading = False
 
-# ตัวแปรสำหรับเช็คว่ามีข้อมูลใหม่อัปเดตหรือไม่
 need_sync = False 
 
 def sync_every_5_mins():
-    """ Thread ที่จะเช็คทุก 5 นาทีว่ามีการแตะบัตรไหม ถ้ามีถึงจะอัปโหลด (ประหยัดแบนด์วิดท์) """
     global need_sync
     while True:
-        time.sleep(30) # 30 วินาที
+        time.sleep(30) 
         if need_sync:
             try:
                 ftp_manager.upload_db()
-                need_sync = False # รีเซ็ตสถานะเมื่อส่งเสร็จ
+                need_sync = False
             except Exception: pass
 
 def nfc_loop(callback_obj):
@@ -58,8 +56,6 @@ def nfc_loop(callback_obj):
             time.sleep(0.5)
     except Exception as e: print(f"NFC Error: {e}")
 
-# --- Minimalist Green Theme UI ---
-# Colors (Matcha/Sage Minimalist Mode)
 BG_COLOR = "#F4F7F4"
 CARD_BG = "#FFFFFF"
 TEXT_MAIN = "#2C3E2D"
@@ -69,7 +65,6 @@ SUCCESS = "#40916C"
 ERROR = "#D96C6C"
 WARNING = "#F2B872"
 
-# Font setting
 FONT_FAMILY = "Segoe UI"
 
 class SevenElevenApp:
@@ -83,14 +78,12 @@ class SevenElevenApp:
         self.setup_ui()
 
     def setup_ui(self):
-        # --- Header Section ---
         self.header_frame = tk.Frame(self.parent, bg=BG_COLOR)
         self.header_frame.pack(fill="x", padx=25, pady=(20, 10))
 
         tk.Label(self.header_frame, text="MOTORWAY", font=(FONT_FAMILY, 12, "bold"), fg=ACCENT, bg=BG_COLOR).pack(anchor="w")
         tk.Label(self.header_frame, text="Top-up System", font=(FONT_FAMILY, 26, "bold"), fg=TEXT_MAIN, bg=BG_COLOR).pack(anchor="w")
 
-        # --- Content Area ---
         self.container_frame = tk.Frame(self.parent, bg=BG_COLOR)
         self.container_frame.pack(fill="both", expand=True, padx=20)
 
@@ -118,7 +111,6 @@ class SevenElevenApp:
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
-        # 1. Scanner Controls Card
         self.card1 = tk.Frame(self.content_frame, bg=CARD_BG, padx=20, pady=15)
         self.card1.pack(fill="x", pady=(5, 5))
 
@@ -141,7 +133,6 @@ class SevenElevenApp:
         self.lbl_card = tk.Label(self.card1, text="Card ID: -", font=(FONT_FAMILY, 12), bg=CARD_BG, fg=TEXT_SUB)
         self.lbl_card.pack(pady=(5, 0))
 
-        # 2. Status Card
         self.card2 = tk.Frame(self.content_frame, bg=CARD_BG, padx=20, pady=15)
         self.card2.pack(fill="x", pady=5)
 
@@ -151,7 +142,6 @@ class SevenElevenApp:
         self.lbl_msg = tk.Label(self.card2, text="", font=(FONT_FAMILY, 11), bg=CARD_BG, fg=TEXT_SUB, wraplength=400, justify="center")
         self.lbl_msg.pack(pady=(5, 0))
 
-        # 3. Registration Card
         self.card3 = tk.Frame(self.content_frame, bg=CARD_BG, padx=20, pady=15)
         self.card3.pack(fill="x", pady=5)
 
@@ -173,7 +163,6 @@ class SevenElevenApp:
         self.btn_verify_otp = tk.Button(self.otp_frame, text="Verify", state="disabled", command=self.handle_verify_otp, font=(FONT_FAMILY, 10, "bold"), bg=SUCCESS, fg="white", disabledforeground="white", relief="flat", cursor="hand2", bd=0)
         self.btn_verify_otp.pack(side="right", ipady=5, ipadx=5)
 
-        # 4. Top-up Card
         self.card4 = tk.Frame(self.content_frame, bg=CARD_BG, padx=20, pady=15)
         self.card4.pack(fill="x", pady=(5, 10))
 
@@ -189,11 +178,11 @@ class SevenElevenApp:
 
     def btn_start(self):
         self.is_reading = True
-        self.lbl_nfc_status.config(text="🟢 สถานะ: กำลังสแกนบัตร...", fg=ACCENT)
+        self.lbl_nfc_status.config(text="🟢 Status : Scanning", fg=ACCENT)
 
     def btn_stop(self):
         self.is_reading = False
-        self.lbl_nfc_status.config(text="🔴 สถานะ: หยุดสแกน", fg=TEXT_SUB)
+        self.lbl_nfc_status.config(text="🔴 Status : Stop", fg=TEXT_SUB)
 
     def handle_nfc_uid(self, uid):
         if not self.is_reading: return
@@ -209,12 +198,12 @@ class SevenElevenApp:
             self.entry_topup.delete(0, 'end')
 
         self.current_uid = uid
-        self.lbl_msg.config(text="⚡ กำลังดึงข้อมูลบัตร...", fg="blue") 
+        self.lbl_msg.config(text="⚡ Retrieving card information...", fg="blue") 
         db = ftp_manager.load_local_db()
         self.lbl_card.config(text=f"Card ID: {uid}")
         
         if uid not in db:
-            self.lbl_status.config(text="บัตรใหม่! กรุณากรอกอีเมลเพื่อลงทะเบียน", fg="blue")
+            self.lbl_status.config(text="New card! Please enter your email to register.", fg="blue")
             self.lbl_msg.config(text="") 
             self.entry_email.config(state="normal")
             self.btn_send_otp.config(state="normal", text="รับ OTP")
@@ -228,7 +217,7 @@ class SevenElevenApp:
             self.btn_topup.config(state="disabled")
         else:
             balance = db[uid].get('balance', 0)
-            self.lbl_status.config(text=f"บัตรนี้ลงทะเบียนแล้ว\nยอดเงินคงเหลือ: {balance} บาท", fg="green")
+            self.lbl_status.config(text=f"This card is already registered.\nBalance remaining. : {balance} bath", fg="green")
             self.lbl_msg.config(text="") 
             self.entry_topup.config(state="normal")
             self.btn_topup.config(state="normal")
@@ -240,12 +229,12 @@ class SevenElevenApp:
     def handle_send_otp(self):
         email = self.entry_email.get()
         if email:
-            self.lbl_msg.config(text="⏳ กำลังส่ง OTP ไปที่อีเมล...", fg="orange")
+            self.lbl_msg.config(text="⏳ Sending OTP to email...", fg="orange")
             self.btn_send_otp.config(state="disabled") 
             self.generated_otp = str(random.randint(100000, 999999))
             threading.Thread(target=self.process_send_otp_thread, args=(email, self.generated_otp, self.current_uid), daemon=True).start()
         else:
-            self.lbl_msg.config(text="⚠️ กรุณากรอกอีเมลก่อน", fg="red")
+            self.lbl_msg.config(text="⚠️ Please enter your email first", fg="red")
 
     def process_send_otp_thread(self, email, otp, target_uid):
         try:
@@ -264,20 +253,20 @@ class SevenElevenApp:
 
     def on_otp_sent_success(self, target_uid):
         self.registering_uid = target_uid 
-        self.lbl_msg.config(text="✅ ส่งรหัส OTP ไปที่อีเมลแล้ว!", fg="green")
+        self.lbl_msg.config(text="✅ OTP sent to your email!", fg="green")
         if self.current_uid == self.registering_uid:
             self.entry_otp.config(state="normal")
             self.btn_verify_otp.config(state="normal")
-        self.btn_send_otp.config(state="normal", text="ส่งใหม่อีกครั้ง")
+        self.btn_send_otp.config(state="normal", text="Send Again")
 
     def on_otp_sent_fail(self):
-        self.lbl_msg.config(text="❌ ส่งอีเมลไม่สำเร็จ เช็คเน็ตหรือรหัสผ่าน", fg="red")
-        self.btn_send_otp.config(state="normal", text="ลองใหม่")
+        self.lbl_msg.config(text="❌ Failed to send email. Check internet connection or password.", fg="red")
+        self.btn_send_otp.config(state="normal", text="Try Again")
 
     def handle_verify_otp(self):
         global need_sync
         if self.current_uid != self.registering_uid:
-            self.lbl_msg.config(text="❌ บัตรไม่ตรงกัน! กรุณาแตะบัตรใบที่ขอ OTP", fg="red")
+            self.lbl_msg.config(text="❌ Card does not match! Please tap the card that requested the OTP.", fg="red")
             return
         if self.entry_otp.get() == self.generated_otp:
             db = ftp_manager.load_local_db()
@@ -285,11 +274,11 @@ class SevenElevenApp:
                 "email": self.entry_email.get(), 
                 "balance": 0, 
                 "entry_station": "",
-                "transactions": [f"[{time.strftime('%H:%M:%S')}] ลงทะเบียนบัตร"]
+                "transactions": [f"[{time.strftime('%H:%M:%S')}] Register."]
             }
             ftp_manager.save_local_db(db)
             need_sync = True 
-            self.lbl_msg.config(text="✅ ลงทะเบียนสำเร็จ! สามารถเติมเงินได้เลย", fg="green")
+            self.lbl_msg.config(text="Registration successful! You can top up your balance now.", fg="green")
             self.registering_uid = "" 
             self.entry_topup.config(state="normal")
             self.btn_topup.config(state="normal")
@@ -298,7 +287,7 @@ class SevenElevenApp:
             self.entry_otp.config(state="disabled")
             self.btn_verify_otp.config(state="disabled")
         else:
-            self.lbl_msg.config(text="❌ OTP ไม่ถูกต้อง", fg="red")
+            self.lbl_msg.config(text="❌ OTP is incorrect", fg="red")
 
     def handle_topup(self):
         global need_sync
@@ -306,19 +295,19 @@ class SevenElevenApp:
             amount = float(self.entry_topup.get())
             db = ftp_manager.load_local_db()
             db[self.current_uid]['balance'] += amount
-            db[self.current_uid]['transactions'].append(f"[{time.strftime('%H:%M:%S')}] เติมเงิน +{amount} บาท")
+            db[self.current_uid]['transactions'].append(f"[{time.strftime('%H:%M:%S')}] Top up +{amount} บาท")
             ftp_manager.save_local_db(db)
             need_sync = True 
-            self.lbl_msg.config(text=f"✅ เติมเงินสำเร็จ! (+{amount} บ.) รอส่งขึ้น FTP ในรอบถัดไป", fg="green")
-            self.lbl_status.config(text=f"บัตรนี้ลงทะเบียนแล้ว\nยอดเงินคงเหลือ: {db[self.current_uid]['balance']} บาท", fg="green")
+            self.lbl_msg.config(text=f"Top-up successful! (+{amount} bath) Waiting to upload to FTP in the next cycle.", fg="green")
+            self.lbl_status.config(text=f"This card is already registered.\nBalance remaining: {db[self.current_uid]['balance']} bath", fg="green")
             self.entry_topup.delete(0, 'end')
         except:
-            self.lbl_msg.config(text="⚠️ กรุณากรอกตัวเลขให้ถูกต้อง", fg="red")
+            self.lbl_msg.config(text="⚠️ Please enter a valid number", fg="red")
 
 def sync_every_5_mins():
     global need_sync
     while True:
-        time.sleep(15) # Faster for testing
+        time.sleep(15) 
         if need_sync:
             try:
                 ftp_manager.upload_db()

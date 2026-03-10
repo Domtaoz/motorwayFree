@@ -19,3 +19,5 @@ FTP_PASS = 'st03603423'
 ftp://158.108.98.128
 
 FTP (File Transfer Protocol)
+
+ftp
