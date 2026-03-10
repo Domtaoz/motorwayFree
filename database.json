@@ -1,19 +1,22 @@
 {
-    "56632303": {
+    "1ABB2303": {
         "email": "domdypol@gmail.com",
-        "balance": 500.0,
+        "balance": 950.0,
         "entry_station": "",
         "transactions": [
-            "[11:13:33] ลงทะเบียนบัตร",
-            "[11:13:39] เติมเงิน +500.0 บาท"
+            "[14:27:50] registor.",
+            "[14:27:55] Top up +1000.0 บาท",
+            "[14:28:38] Entered: Station 1",
+            "[14:29:05] Exited: Station 2 (from Station 1) Fee: -50 THB"
         ]
     },
-    "MOCK-1234": {
-        "balance": 850,
-        "entry_station": "Station 1",
+    "8B052403": {
+        "email": "domdypol@gmail.com",
+        "balance": 100.0,
+        "entry_station": "",
         "transactions": [
-            "[18:46:57] ออกด่าน: Station 1 (จาก Station 4) หัก -150 บาท",
-            "[18:57:55] เข้าด่าน: Station 1"
+            "[14:30:41] registor.",
+            "[14:30:45] Top up +100.0 บาท"
         ]
     }
 }
