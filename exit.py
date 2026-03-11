@@ -255,7 +255,8 @@ class ExitApp:
             self.lbl_status.config(text=f"Insufficient balance! ({balance} THB, need {toll_fee-balance} THB more)", fg=ERROR)
             self.toggle_station_ui(tk.NORMAL)
         else:
-            self.lbl_status.config(text=f"Entered: {entry_station}\nToll Fee: {toll_fee} THB\n>> Gate opened: {selected_exit_station}", fg=SUCCESS)
+            remaining = balance - toll_fee
+            self.lbl_status.config(text=f"Entered: {entry_station}\nToll Fee: {toll_fee} THB\n>> Gate opened: {selected_exit_station}\nRemaining Balance: {remaining} THB", fg=SUCCESS)
             threading.Thread(target=self.process_cd_sync, args=(uid, toll_fee, selected_exit_station), daemon=True).start()
 
     def process_cd_sync(self, uid, fee, exit_station):
